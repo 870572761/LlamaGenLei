@@ -3,7 +3,16 @@ import numpy as np
 import os
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
-
+#TODO: for get data
+def get_files_in_directory(directory):
+    try:
+        files = []
+        for root, dirs, filenames in os.walk(directory):
+            for filename in filenames:
+                files.append(filename)
+        return files
+    except FileNotFoundError:
+        return None
 
 class CustomDataset(Dataset):
     def __init__(self, feature_dir, label_dir):
@@ -23,8 +32,11 @@ class CustomDataset(Dataset):
         # self.feature_files = sorted(os.listdir(feature_dir))
         # self.label_files = sorted(os.listdir(label_dir))
         # TODO: make it configurable
-        self.feature_files = [f"{i}.npy" for i in range(1281167)]
-        self.label_files = [f"{i}.npy" for i in range(1281167)]
+        # self.feature_files = [f"{i}.npy" for i in range(1281167)]
+        # self.label_files = [f"{i}.npy" for i in range(1281167)]
+        
+        self.label_files = get_files_in_directory(self.feature_dir)
+        self.feature_files = self.label_files
 
     def __len__(self):
         assert len(self.feature_files) == len(self.label_files), \
@@ -57,5 +69,5 @@ def build_imagenet_code(args):
     feature_dir = f"{args.code_path}/imagenet{args.image_size}_codes"
     label_dir = f"{args.code_path}/imagenet{args.image_size}_labels"
     assert os.path.exists(feature_dir) and os.path.exists(label_dir), \
-        f"please first run: bash scripts/autoregressive/extract_codes_c2i.sh ..."
+        f"please first run: bash scripts/autoregressive/extract_codes_c2i.sh ... \n{feature_dir}\n{label_dir}\n"
     return CustomDataset(feature_dir, label_dir)

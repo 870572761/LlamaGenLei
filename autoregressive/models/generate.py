@@ -10,6 +10,19 @@ import copy
 # torch._inductor.config.coordinate_descent_tuning = True
 # torch._inductor.config.triton.unique_kernel_names = True
 # torch._inductor.config.fx_graph_cache = True # Experimental feature to reduce compilation times, will be on by default in future
+import time
+class Timer:
+    def __init__(self,name):
+        self.name = name
+    def __enter__(self):
+        torch.cuda.synchronize()
+        self.start = time.perf_counter()
+
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        torch.cuda.synchronize()
+        elapsed = time.perf_counter() - self.start
+        print(f'{self.name} took {elapsed} seconds')
 
 
 ### from https://huggingface.co/transformers/v3.2.0/_modules/transformers/generation_utils.html

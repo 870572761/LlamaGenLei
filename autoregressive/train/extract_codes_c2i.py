@@ -10,6 +10,12 @@ from torchvision import transforms
 import numpy as np
 import argparse
 import os
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 from utils.distributed import init_distributed_mode
 from dataset.augmentation import center_crop_arr
@@ -89,15 +95,18 @@ def main(args):
     )
 
     total = 0
-    for x, y in loader:
+    for x, y in loader:#539826 is imagenet dataset num cls num is 1000, so y <= 999
         x = x.to(device)
         if args.ten_crop:
             x_all = x.flatten(0, 1)
             num_aug = 10
-        else:
-            x_flip = torch.flip(x, dims=[-1])
+        elif args.flip:
+            x_flip = torch.flip(x, dims=[-1])#[Anno] 水平翻转做了图像增强
             x_all = torch.cat([x, x_flip])
             num_aug = 2
+        else:
+            x_all = x
+            num_aug = 1
         y = y.to(device)
         with torch.no_grad():
             _, _, [_, _, indices] = vq_model.encode(x_all)
@@ -114,6 +123,7 @@ def main(args):
         else:
             total += 1
         print(total)
+    print("Finish!!")
 
     dist.destroy_process_group()
 
@@ -129,6 +139,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", type=str, default='imagenet')
     parser.add_argument("--image-size", type=int, choices=[256, 384, 448, 512], default=256)
     parser.add_argument("--ten-crop", action='store_true', help="whether using random crop")
+    parser.add_argument("--flip", action='store_true', help="whether using random flip")
     parser.add_argument("--crop-range", type=float, default=1.1, help="expanding range of center crop")
     parser.add_argument("--global-seed", type=int, default=0)
     parser.add_argument("--num-workers", type=int, default=24)
