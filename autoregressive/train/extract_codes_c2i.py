@@ -11,7 +11,6 @@ import numpy as np
 import argparse
 import os
 import sys
-import os
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 if project_root not in sys.path:
