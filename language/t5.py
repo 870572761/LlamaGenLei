@@ -30,6 +30,7 @@ class T5Embedder:
         self.dir_or_name = dir_or_name
         tokenizer_path, path = dir_or_name, dir_or_name
         if local_cache:
+            print("++++++++Local model Loading++++++++")
             cache_dir = os.path.join(self.cache_dir, dir_or_name)
             tokenizer_path, path = cache_dir, cache_dir
         elif dir_or_name in self.available_models:
@@ -51,8 +52,10 @@ class T5Embedder:
             tokenizer_path = cache_dir
 
         print(tokenizer_path)
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-        self.model = T5EncoderModel.from_pretrained(path, **t5_model_kwargs).eval()
+        print(f"Tokenizer Loading from {tokenizer_path}")
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_path, local_files_only=True)
+        print(f"Model Loading from {path}")
+        self.model = T5EncoderModel.from_pretrained(path, **t5_model_kwargs, local_files_only=True).eval()
         self.model_max_length = model_max_length
 
     def get_text_embeddings(self, texts):
@@ -199,3 +202,18 @@ class T5Embedder:
         caption = re.sub(r'^\.\S+$', '', caption)
 
         return caption.strip()
+    
+# if __name__ == "__main__":
+#     save_path = "/data/lei/localmodel/flan-t5-xl"
+#     t5_model_kwargs=None
+#     if t5_model_kwargs is None:
+#         torch_dtype=torch.bfloat16
+#         device="cuda"
+#         t5_model_kwargs = {'low_cpu_mem_usage': True, 'torch_dtype': torch_dtype}
+#         t5_model_kwargs['device_map'] = {'shared': device, 'encoder': device}
+#     tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-xl")
+#     # model = T5EncoderModel.from_pretrained("google/flan-t5-xl").eval()
+#     model = T5EncoderModel.from_pretrained("google/flan-t5-xl", **t5_model_kwargs)
+#     model.save_pretrained(save_path)
+#     tokenizer.save_pretrained(save_path)
+#     print(f"模型和分词器已成功保存到: {save_path}")
