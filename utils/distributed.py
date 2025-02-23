@@ -21,7 +21,8 @@ def init_distributed_mode(args):
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         args.rank = int(os.environ["RANK"])
         args.world_size = int(os.environ['WORLD_SIZE'])
-        args.gpu = int(os.environ['LOCAL_RANK'])
+        num_gpus = torch.cuda.device_count()
+        args.gpu = int(os.environ['LOCAL_RANK']) % num_gpus
         args.dist_url = 'env://'
         os.environ['LOCAL_SIZE'] = str(torch.cuda.device_count())
     elif 'SLURM_PROCID' in os.environ:
